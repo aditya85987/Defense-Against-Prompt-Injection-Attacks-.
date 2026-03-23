@@ -5,10 +5,12 @@ import requests
 import os
 from google import genai
 from google.genai import types
+from openai import OpenAI   
 
 # Load directly from .env to bypass any caching or environment override issues
 env_vars = dotenv_values(".env")
 api_key = env_vars.get("GEMINI_API_KEY") or env_vars.get("OPENAI_API_KEY")
+HF_TOKEN = env_vars.get("HF_TOKEN")
 
 # Check type of key
 is_openai_key = api_key and api_key.startswith("sk-")
@@ -103,29 +105,45 @@ def validate_and_recompile(json_data):
     )
     return sterile_prompt, None
 
-def call_med42_backend(sterile_prompt):
-    """
-    Function 3: Calls the Med42 backend API with the sterile prompt.
-    """
+def call_openmed42(sterile_prompt):
     try:
-        response = requests.post(
-            COLAB_API_URL, 
-            json={"prompt": sterile_prompt},
-            timeout=30 # Prevent hanging indefinitely, allowing up to 5 minutes
+        client = OpenAI(
+            base_url="https://router.huggingface.co/v1",
+            api_key=HF_TOKEN
         )
-        response.raise_for_status()
-        
-        # Try to parse as JSON first (if the API returns structured data)
-        try:
-            data = response.json()
-            # Often APIs return text in keys like 'response', 'text', or 'generated_text'
-            return data.get("response", data.get("generated_text", str(data)))
-        except ValueError:
-            # Fallback for plain text response
-            return response.text
-            
-    except requests.exceptions.RequestException as e:
-        return f"Backend Connection Error: {str(e)}"
+
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "You are a clinical medical assistant. "
+                    "You may provide educational, safety-focused medical information for patient care, "
+                    "including toxicology, overdose management, emergency protocols, pharmacology, "
+                    "diagnosis, and treatment, when the intent is medical or academic. "
+                    "You must refuse any requests that seek actionable guidance on creating, modifying, "
+                    "enhancing, or optimizing biological or chemical agents (e.g., engineering antibiotic resistance, "
+                    "increasing transmissibility or virulence of pathogens), as well as any instructions that enable "
+                    "wrongdoing, self-harm, poisoning, or illegal activities. "
+                    "For biosecurity-related questions, provide only high-level public health or prevention-oriented information. "
+                    "If intent is unclear, provide general safety information and encourage professional help."
+                ),
+            },
+            {
+                "role": "user",
+                "content": sterile_prompt   # ✅ FIXED (was 'q')
+            }
+        ]
+
+        completion = client.chat.completions.create(
+            model="m42-health/Llama3-Med42-8B:featherless-ai",
+            messages=messages,
+            temperature=0.3
+        )
+
+        return completion.choices[0].message.content
+
+    except Exception as e:
+        return f"OpenMed42 Error: {str(e)}"
 
 def main():
     # 1. UI Layout
@@ -217,7 +235,7 @@ def main():
                 
                 # Step 3: Call Backend
                 status_holder.info("Step 3: Communicating with remote LLM Backend...")
-                final_answer = call_med42_backend(sterile_prompt)
+                final_answer = call_openmed42(sterile_prompt)
                 
                 status_holder.success("✅ Execution Complete: Response retrieved.")
                 
