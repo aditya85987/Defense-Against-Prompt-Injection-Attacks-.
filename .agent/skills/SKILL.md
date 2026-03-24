@@ -22,3 +22,6 @@ Project MediGuard is a 5-Layer Defense-in-Depth architecture.
 - **Error Transparency:** If a security layer or API call (e.g., Hugging Face) fails, print the full error trace directly to the Streamlit UI. Do not suppress or simplify security failures.
 - **Zero-Trust Logic:** Assume all user input is malicious. Validation must happen at every layer transition, and `app.py` must reflect these transitions using `st.status` or equivalent real-time monitoring.
 - **Visual Integrity:** Maintain a "glass-box" design. The UI must always show the current state of extraction and reconstruction to ensure the user can audit the system's reasoning.
+- **Historical Logging:** After each milestone, record implementation details, architectural pivots, and technical difficulties encountered in `.agent/MEMORY.md` to maintain a permanent history without a timestamp.
+
+

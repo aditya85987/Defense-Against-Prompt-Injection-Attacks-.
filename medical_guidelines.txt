@@ -1,0 +1,11 @@
+Hypertension Management Protocol (Protocol 14.1-IM): First-line treatments per JNC/ACC-AHA guidelines include Thiazide diuretics, ACE inhibitors, ARBs, or Calcium Channel Blockers. Target BP is <130/80 mmHg for most adults. Lifestyle modifications such as the DASH diet, sodium restriction, weight management, regular exercise, and alcohol moderation are strictly recommended.
+
+Type 2 Diabetes Mellitus Protocol (Protocol 3.8-ENDO): Management involves Metformin as the initial pharmacologic agent along with comprehensive lifestyle modifications. If A1C target is not achieved after 3 months, consider adding a SGLT2 inhibitor (especially if established ASCVD or heart failure), a GLP-1 receptor agonist, or a DPP-4 inhibitor. Insulin therapy should be considered if A1C >10% or if patient is symptomatic.
+
+Asthma Exacerbation Protocol (Protocol 7.2-RESP): Management follows a stepwise approach. Step 1: SABA as needed. Step 2: Low-dose ICS. Step 3: Low-dose ICS/LABA. Step 4: Medium-dose ICS/LABA. Step 5: High-dose ICS/LABA plus add-on therapy (e.g., tiotropium, biologics). For acute exacerbations: administer Salbutamol nebulizer, systemic corticosteroids, and supplemental O2.
+
+Toxicology Opioid Overdose Protocol (Protocol 4.2-TOX): Standard protocol requires verifying patient weight and immediately administering Naloxone (0.4-2.0mg IV/IM/SC) for suspected overdose. Monitor the respiratory rate and maintain the airway. Re-dose every 2-3 minutes if there is no response, up to a maximum of 10mg.
+
+Cardiology Acute MI Protocol (Protocol 5.1-CARD): Management of acute myocardial infarction requires immediate administration of Aspirin (162-325mg chewed), a 12-lead ECG monitor, and urgent evaluation for reperfusion therapy (PCI or Fibrinolytics) within 90 minutes of medical contact. Administer Nitroglycerin sublingually for chest pain unless contraindicated.
+
+Neurology Ischemic Stroke Protocol (Protocol 9.1-NEURO): Acute ischemic stroke management requires a CT head to definitively exclude hemorrhage, followed by IV Alteplase (0.9mg/kg, max 90mg) within a restrictive 4.5hr window. Consider mechanical thrombectomy for large vessel occlusion within 24 hours. Monitor BP tightly, manage glucose, and control temperature. Start antiplatelet therapy after 24hr.
