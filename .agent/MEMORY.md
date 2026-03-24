@@ -53,3 +53,16 @@ This section maintains a detailed record of implementation decisions, architectu
     - *Extraction Rigidity*: During QA testing, casual medical phrasing (e.g., "for my patient...") triggered the extraction model's "INVALID action" flag too early, preventing the prompt from reaching the RAG layer.
     - *Design Decision*: We maintained the strict "INVALID" block to prioritize system safety over query flexibility, adhering to the **Zero-Trust** implementation protocol.
 
+### Milestone 4: Phase 4 Local ML Anomaly Detection
+- **Objective**: Replace strict threshold logic with adaptive numerical classification via `scikit-learn` algorithms.
+- **Implemented Synthetic Datasets**: Procedurally generated `prompts_dataset.csv` balancing 55 safe clinical queries against 55 adversarial payloads (Base64, Hex, Special Character spam).
+- **Implemented Feature Matrices**: Extracted 3-dimensional features from strings: Total Length, Shannon Entropy, and Special Character Ratios.
+- **Implemented IsolationForest**: Fitted and exported a local unsupervised `IsolationForest` (`anomaly_detector.joblib`) specifically tuned to detect the mathematical footprint of obfuscated prompt matrices.
+- **Validation**: Demonstrated that the `.joblib` model cleanly bisected plain-text medical inquiries (1 / SAFE) from dense Base64 instructions (-1 / MALICIOUS).
+
+### Milestone 5: Phase 5 ML Pipeline Integration
+- **Objective**: Deploy the trained anomaly detector to actively intercept user queries within Layer 1.
+- **Implemented Model Integration**: Updated `core/filters.py` to dynamically load `ml_training/anomaly_detector.joblib` on startup. 
+- **Upgraded Heuristic Filter**: Modified `heuristic_pre_filter` to translate prompts via `extract_features` into a shape compatible with the `IsolationForest` weights, prioritizing dynamic algorithmic blocking over static thresholds.
+- **Fail-Secure Architecture**: Wrapped the ML instantiation in a module-level `try/except` block, ensuring that if the `.joblib` binary goes offline, Layer 1 gracefully falls back to the static hardcoded limits implemented during Phase 2.
+

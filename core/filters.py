@@ -42,6 +42,20 @@ except Exception as e:
     # Graceful degradation logic if offline or model fails
     pass
 
+# Attempt to load Phase 4 ML Anomaly Detector (Layer 1 upgrade)
+ML_AVAILABLE = False
+try:
+    import joblib
+    import os
+    import numpy as np
+    
+    model_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "ml_training", "anomaly_detector.joblib")
+    if os.path.exists(model_path):
+        anomaly_detector = joblib.load(model_path)
+        ML_AVAILABLE = True
+except Exception as e:
+    logger.warning(f"ML Anomaly Detector Offline. Falling back to rigid heuristics. Error: {e}")
+
 def calculate_shannon_entropy(text: str) -> float:
     """Calculates Normalized True Shannon Entropy."""
     if not text:
@@ -58,13 +72,37 @@ def calculate_shannon_entropy(text: str) -> float:
     normalized_entropy = entropy / max_entropy if max_entropy > 0 else 0.0
     return normalized_entropy
 
+def extract_features(text: str) -> list[float]:
+    """Extracts lengths, entropy, and special character ratio for the ML anomaly detector."""
+    text = str(text)
+    length = len(text)
+    if length == 0:
+        return [0.0, 0.0, 0.0]
+        
+    entropy = calculate_shannon_entropy(text)
+    special_chars = sum(1 for c in text if not c.isalnum() and not c.isspace())
+    special_ratio = special_chars / length
+    
+    return [float(length), entropy, special_ratio]
+
 @security_logger
 def heuristic_pre_filter(prompt: str) -> tuple[bool, str | None]:
     """
     Layer 1: Anomaly Detection (Heuristic Pre-filter)
-    Rejects inputs longer than 1000 characters or containing high-entropy patterns 
-    (normalized entropy ratio > 0.85).
+    Employs an IsolationForest ML model if available. Otherwise gracefully 
+    degrades to strict heuristic checks (Length > 1000, Normalized Entropy > 0.85).
     """
+    if ML_AVAILABLE:
+        try:
+            features = extract_features(prompt)
+            # IsolationForest predicts 1 for normal, -1 for anomaly
+            prediction = anomaly_detector.predict([features])[0]
+            if prediction == -1:
+                return False, f"Security Violation: ML Anomaly Detector Triggered. Suspicious mathematical signature."
+        except Exception as e:
+            logger.warning(f"ML Processing Failed. Falling back to heuristics. Error: {e}")
+
+    # Legacy Fallback Heuristics
     if len(prompt) > 1000:
         return False, "Security Violation: Input exceeds maximum allowed length (1000 characters)."
     
