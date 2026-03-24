@@ -1,0 +1,15 @@
+.env
+**/__pycache__/
+.pytest_cache/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+bin/
+lib/
+share/
+Include/
+pip-selfcheck.json
