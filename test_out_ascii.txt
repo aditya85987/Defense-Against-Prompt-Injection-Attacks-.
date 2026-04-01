@@ -1,0 +1,57 @@
+============================= test session starts =============================
+platform win32 -- Python 3.10.7, pytest-9.0.2, pluggy-1.6.0 -- C:\Python 3.10.7\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\ASUS\Desktop\Satya\SEM8_project
+plugins: anyio-4.10.0
+collecting ... collected 2 items
+
+tests/test_filters.py::test_heuristic_pre_filter FAILED                  [ 50%]
+tests/test_filters.py::test_pii_redactor FAILED                          [100%]
+
+================================== FAILURES ===================================
+__________________________ test_heuristic_pre_filter __________________________
+
+    def test_heuristic_pre_filter():
+        print("Testing Layer 1: Heuristic Pre-filter...")
+    
+        # Test 1: Normal input
+        is_safe, msg = heuristic_pre_filter("What is the treatment for hypertension?")
+        assert is_safe == True
+        print("  Test 1 (Normal): PASSED")
+    
+        # Test 2: Long input (> 1000)
+        long_input = "A" * 1001
+        is_safe, msg = heuristic_pre_filter(long_input)
+        assert is_safe == False
+>       assert "maximum allowed length" in msg
+E       AssertionError: assert 'maximum allowed length' in 'Security Violation: ML Anomaly Detector Triggered. Suspicious mathematical signature.'
+
+tests\test_filters.py:15: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Testing Layer 1: Heuristic Pre-filter...
+  Test 1 (Normal): PASSED
+------------------------------ Captured log call ------------------------------
+WARNING  SecurityPipeline:filters.py:25 [2026-03-31T16:01:25.828855] REJECTED by Layer: heuristic_pre_filter | Reason: Security Violation: ML Anomaly Detector Triggered. Suspicious mathematical signature. | Payload Snippet: 'AAAAAAAAAAAAAAAAAAAA...'
+______________________________ test_pii_redactor ______________________________
+
+    def test_pii_redactor():
+        print("\nTesting Layer 5: PII Redaction...")
+    
+        # Test 1: SSN
+        text = "The patient's SSN is 123-45-6789 and 987654321."
+        redacted = pii_redactor(text)
+>       assert "123-45-6789" not in redacted
+E       assert '123-45-6789' not in "The patient...d 987654321."
+E         
+E         '123-45-6789' is contained here:
+E           The patient's SSN is 123-45-6789 and 987654321.
+E         ?                      +++++++++++
+
+tests\test_filters.py:31: AssertionError
+---------------------------- Captured stdout call -----------------------------
+
+Testing Layer 5: PII Redaction...
+=========================== short test summary info ===========================
+FAILED tests/test_filters.py::test_heuristic_pre_filter - AssertionError: ass...
+FAILED tests/test_filters.py::test_pii_redactor - assert '123-45-6789' not in...
+============================== 2 failed in 9.34s ==============================

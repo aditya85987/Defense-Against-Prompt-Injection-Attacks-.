@@ -99,10 +99,12 @@ def heuristic_pre_filter(prompt: str) -> tuple[bool, str | None]:
             prediction = anomaly_detector.predict([features])[0]
             if prediction == -1:
                 return False, f"Security Violation: ML Anomaly Detector Triggered. Suspicious mathematical signature."
+            else:
+                return True, None  # ML approved — skip legacy heuristics
         except Exception as e:
             logger.warning(f"ML Processing Failed. Falling back to heuristics. Error: {e}")
 
-    # Legacy Fallback Heuristics
+    # Legacy Fallback Heuristics (ONLY when ML is unavailable or crashed)
     if len(prompt) > 1000:
         return False, "Security Violation: Input exceeds maximum allowed length (1000 characters)."
     

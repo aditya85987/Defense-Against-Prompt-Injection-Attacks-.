@@ -1,10 +1,11 @@
 import time
-from google.genai import types
+from core.llm_local import call_local_ollama
 
-def call_clinical_assistant(ai_client, sterile_prompt):
+def call_clinical_assistant(sterile_prompt):
     """
-    Function 3: Communicates with Gemini to provide clinical information based on the sterile prompt.
-    Includes retry logic to handle 429 RESOURCE_EXHAUSTED errors.
+    Function 3: Communicates with local Gemma3-4B via Ollama.
+    This provides clinical information based on the sterile prompt.
+    NO API KEY REQUIRED. NO RATE LIMITS.
     """
     system_instruction = (
         "You are a clinical medical assistant. "
@@ -19,25 +20,11 @@ def call_clinical_assistant(ai_client, sterile_prompt):
         "If intent is unclear, provide general safety information and encourage professional help."
     )
 
-    max_retries = 3
-    for attempt in range(max_retries):
-        try:
-            response = ai_client.models.generate_content(
-                model='gemini-2.5-flash',
-                contents=sterile_prompt,
-                config=types.GenerateContentConfig(
-                    system_instruction=system_instruction
-                )
-            )
-            return response.text
-        except Exception as e:
-            error_str = str(e)
-            if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str:
-                wait_time = (attempt + 1) * 10  # 10s, 20s, 30s
-                print(f"  [Reasoner] Rate limited (attempt {attempt+1}/{max_retries}), waiting {wait_time}s...")
-                time.sleep(wait_time)
-                continue
-            else:
-                return f"Clinical Assistant Error: {str(e)}"
-
-    return "Clinical Assistant Error: Service temporarily unavailable after retries. Please try again later."
+    # Use the local Ollama client instead of external Gemini
+    response_text = call_local_ollama(
+        prompt=sterile_prompt, 
+        system_instruction=system_instruction, 
+        json_mode=False
+    )
+    
+    return response_text

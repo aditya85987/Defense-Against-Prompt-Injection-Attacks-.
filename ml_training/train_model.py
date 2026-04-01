@@ -9,10 +9,17 @@ def calculate_shannon_entropy(text):
     if not text:
         return 0.0
     from collections import Counter
+    import math
     counts = Counter(text)
     length = len(text)
-    entropy = -sum((count / length) * math.log2(count / length) for count in counts.values())
-    return entropy
+    entropy = 0.0
+    for count in counts.values():
+        probability = count / length
+        entropy -= probability * math.log2(probability)
+        
+    max_entropy = math.log2(length) if length > 1 else 1.0
+    normalized_entropy = entropy / max_entropy if max_entropy > 0 else 0.0
+    return normalized_entropy
 
 def extract_features(text):
     """
@@ -48,7 +55,10 @@ def main():
     # Train IsolationForest
     # Note: Contamination implies the expected proportion of anomalies in the dataset.
     print("Training sklearn IsolationForest...")
-    model = IsolationForest(n_estimators=100, contamination=0.5, random_state=42)
+    # FIX: contamination=0.5 forced the model to mark 50% of the dataset as anomalous. 
+    # With 400 safe and 200 malicious, this forced 100 safe queries to be boundary-checked as malicious.
+    # Set to 0.25 to reduce false refusals on long clinical queries while retaining boundaries.
+    model = IsolationForest(n_estimators=100, contamination=0.25, random_state=42)
     model.fit(X)
     
     model_path = os.path.join(os.path.dirname(__file__), "anomaly_detector.joblib")
