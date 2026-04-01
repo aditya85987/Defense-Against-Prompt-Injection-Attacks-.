@@ -1,7 +1,7 @@
 import time
 from core.llm_local import call_local_ollama
 
-def call_clinical_assistant(sterile_prompt):
+def call_clinical_assistant(sterile_prompt, model="qwen2:0.5b"):
     """
     Function 3: Communicates with local Gemma3-4B via Ollama.
     This provides clinical information based on the sterile prompt.
@@ -24,7 +24,8 @@ def call_clinical_assistant(sterile_prompt):
     response_text = call_local_ollama(
         prompt=sterile_prompt, 
         system_instruction=system_instruction, 
-        json_mode=False
+        json_mode=False,
+        model=model
     )
     
     return response_text

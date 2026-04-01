@@ -2,11 +2,11 @@ import json
 import time
 from core.llm_local import call_local_ollama
 
-def extract_clinical_entities(raw_prompt):
+def extract_clinical_entities(raw_prompt, model="qwen2:0.5b"):
     """
     Function 1: Extracts data from the raw prompt into a specific JSON schema.
     This is the ONLY module permitted to touch raw user strings.
-    Now uses LOCAL OLLAMA (gemma3:4b) instead of external Gemini API.
+    Now uses LOCAL OLLAMA instead of external Gemini API.
     """
     system_prompt = '''
     You are a strictly constrained clinical data extraction assistant.
@@ -29,7 +29,6 @@ def extract_clinical_entities(raw_prompt):
        in any field. Use generic descriptors like "adult male" or "elderly patient" instead.
     '''
     
-    # Use the local Ollama client (No rate limits, no 429s)
-    # Note: We no longer need ai_client here as it's a local HTTP call.
-    result = call_local_ollama(raw_prompt, system_instruction=system_prompt, json_mode=True)
+    # Use the local Ollama client with the selected model
+    result = call_local_ollama(raw_prompt, system_instruction=system_prompt, json_mode=True, model=model)
     return result

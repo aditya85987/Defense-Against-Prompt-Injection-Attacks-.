@@ -4,15 +4,15 @@ import logging
 
 logger = logging.getLogger("OllamaClient")
 
-def call_local_ollama(prompt, system_instruction=None, json_mode=False):
+def call_local_ollama(prompt, system_instruction=None, json_mode=False, model="qwen2:0.5b"):
     """
-    Standardizes interaction with local Ollama instance (gemma3:4b).
+    Standardizes interaction with local Ollama instance.
     Eliminates all API rate limits and costs by running locally.
     """
     url = "http://localhost:11434/api/generate"
     
     payload = {
-        "model": "qwen2:0.5b",
+        "model": model,
         "prompt": prompt,
         "format": "json" if json_mode else "",
         "stream": False,

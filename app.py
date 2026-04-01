@@ -21,13 +21,13 @@ api_key = env_vars.get("GEMINI_API_KEY")
 
 from benchmark_runner import execute_benchmarks
 
-def run_benchmarks():
-    st.info("Initiating Live Security Sandbox Evaluation (100 Samples)...")
+def run_benchmarks(ollama_model="qwen2:0.5b"):
+    st.info(f"Initiating Live Security Sandbox Evaluation (100 Samples) using {ollama_model}...")
     progress_bar = st.progress(0)
     status_text = st.empty()
     
     # Run the tests dynamically
-    metrics, results = execute_benchmarks(is_streamlit=True, progress_bar=progress_bar, status_text=status_text)
+    metrics, results = execute_benchmarks(is_streamlit=True, progress_bar=progress_bar, status_text=status_text, model=ollama_model)
     
     if "error" in metrics:
         st.error(metrics["error"])
@@ -35,20 +35,40 @@ def run_benchmarks():
         
     status_text.text(f"✅ Evaluated 100 queries. Overall Accuracy: {metrics.get('accuracy', 0) * 100:.1f}%")
     
-    # Plotting Data (Converting percentages 0.0-1.0 to 0-100 scales)
-    data = {
-        'System': ['Baseline (No Protection)', 'MediGuard Architecture'],
-        'False Refusal Rate (%)': [0.0, metrics['false_refusal_rate'] * 100],
-        'Prompt Injection Block Rate (%)': [0.0, metrics['injection_block_rate'] * 100]
-    }
-    
-    df = pd.DataFrame(data).set_index('System')
     st.subheader("Comprehensive Security Test Results")
-    st.bar_chart(df)
     
-    col1, col2 = st.columns(2)
-    col1.metric("MediGuard False Refusals", f"{metrics['false_refusal_rate'] * 100:.1f}%", "-0% (Target)", delta_color="inverse")
-    col2.metric("MediGuard Injection Block", f"{metrics['injection_block_rate'] * 100:.1f}%", "+100% (Target)")
+    col_graph1, col_graph2 = st.columns(2)
+    
+    with col_graph1:
+        st.markdown("#### 📉 False Refusal Rate")
+        fr_data = {
+            'System': ['Baseline (LLM)', 'MediGuard'],
+            'Rate (%)': [0.5, metrics['false_refusal_rate'] * 100]
+        }
+        df_fr = pd.DataFrame(fr_data).set_index('System')
+        st.bar_chart(df_fr)
+        st.caption("Lower is better. Baseline LLM accepts all queries (0% refusal).")
+        # For refusal, lower is better. Baseline is 0. 
+        # Statement reflects the gap in utility.
+        st.markdown(f"**MediGuard has {metrics['false_refusal_rate'] * 100:.1f}% higher False Refusal than Baseline**")
+
+    with col_graph2:
+        st.markdown("#### 🛡️ Injection Block Rate")
+        ib_data = {
+            'System': ['Baseline (LLM)', 'MediGuard'],
+            'Rate (%)': [0.5, metrics['injection_block_rate'] * 100]
+        }
+        df_ib = pd.DataFrame(ib_data).set_index('System')
+        st.bar_chart(df_ib)
+        st.caption("Higher is better. Baseline LLM has 0% protection against injections.")
+        st.markdown(f"**Security Delta: {metrics['injection_block_rate'] * 100:+.1f}% Better than Baseline**")
+
+    st.markdown("---")
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("Baseline Refusal", "0.0%")
+    m2.metric("MediGuard Refusal", f"{metrics['false_refusal_rate'] * 100:.1f}%")
+    m3.metric("Baseline Block", "0.0%")
+    m4.metric("MediGuard Block", f"{metrics['injection_block_rate'] * 100:.1f}%")
 
 def main():
     st.set_page_config(
@@ -58,6 +78,26 @@ def main():
     )
     
     st.title("🛡️ MediGuard: Air-Gapped Semantic Reconstruction")
+    
+    # Model Selection Hub
+    st.markdown("### 🧪 Model Configuration")
+    col_model_select, _ = st.columns([1, 2])
+    with col_model_select:
+        selected_model = st.selectbox(
+            "Select Local Reasoning Model (L2/L5):",
+            options=["Qwen2-0.5B (Fast)", "Llama3-8B (Balanced)", "Mistral-7B (Clinical Focus)"],
+            index=0,
+            help="Switch the underlying LLM used for Clinical Entity Extraction and Final Reasoner tasks."
+        )
+    
+    # Map friendly names to Ollama tags
+    model_mapping = {
+        "Qwen2-0.5B (Fast)": "qwen2:0.5b",
+        "Llama3-8B (Balanced)": "llama3:8b",
+        "Mistral-7B (Clinical Focus)": "mistral"
+    }
+    ollama_model = model_mapping.get(selected_model, "qwen2:0.5b")
+    
     st.markdown("---")
     
     col_input, col_output = st.columns([1, 1])
@@ -116,9 +156,9 @@ def main():
 
     st.markdown("---")
     with st.expander("📊 Run Security Benchmarks", expanded=False):
-        st.write("Evaluate MediGuard efficiency against Standard Semantic Injections.")
+        st.write(f"Evaluate MediGuard efficiency using **{selected_model}** against Standard Semantic Injections.")
         if st.button("Execute Stress Test"):
-            run_benchmarks()
+            run_benchmarks(ollama_model=ollama_model)
 
     if submit_button:
         if not user_query.strip():
@@ -132,7 +172,7 @@ def main():
         l5_holder.info("Nothing reached here")
         answer_placeholder.empty()
         
-        with status_holder.status("🚀 MediGuard Pipeline Initialized...", expanded=True) as status:
+        with status_holder.status(f"🚀 MediGuard Pipeline Initialized ({selected_model})...", expanded=True) as status:
             # L1
             l1_holder.warning("⏳ Processing...")
             st.write("Checking L1: Anomaly...")
@@ -159,7 +199,7 @@ def main():
                 # L2
                 l2_holder.warning("⏳ Processing...")
                 st.write("Executing L2: Sandbox...")
-                json_data = extract_clinical_entities(user_query)
+                json_data = extract_clinical_entities(user_query, model=ollama_model)
                 if json_data.get("action_requested") == "INVALID":
                      l2_holder.error("❌ Blocked")
                      status.update(label="🚨 REJECTED AT L2", state="error")
@@ -182,7 +222,7 @@ def main():
                 # L5
                 l5_holder.warning("⏳ Processing...")
                 st.write("Executing L5: Final Reasoner...")
-                raw_response = call_clinical_assistant(sterile_prompt)
+                raw_response = call_clinical_assistant(sterile_prompt, model=ollama_model)
                 final_answer = pii_redactor(raw_response)
                 l5_holder.success("✅ Finalized L5")
                 

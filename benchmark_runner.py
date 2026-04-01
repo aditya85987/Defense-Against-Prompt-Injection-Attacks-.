@@ -10,7 +10,7 @@ except ImportError:
 from core.filters import heuristic_pre_filter
 from core.sentinel import check_injection_hf
 
-def execute_benchmarks(is_streamlit=False, progress_bar=None, status_text=None):
+def execute_benchmarks(is_streamlit=False, progress_bar=None, status_text=None, model="qwen2:0.5b"):
     """
     Evaluates the 100-sample benchmark dataset across MediGuard's filtering pipeline.
     Calculates False Refusals (L1/L3 wrongly blocking normal clinical prompts) and
