@@ -19,16 +19,36 @@ from core.sentinel import check_injection_hf
 env_vars = dotenv_values(".env")
 api_key = env_vars.get("GEMINI_API_KEY")
 
+from benchmark_runner import execute_benchmarks
+
 def run_benchmarks():
-    st.info("Starting Benchmark Execution. This will test against 10 safe and 10 malicious prompts...")
+    st.info("Initiating Live Security Sandbox Evaluation (100 Samples)...")
+    progress_bar = st.progress(0)
+    status_text = st.empty()
+    
+    # Run the tests dynamically
+    metrics, results = execute_benchmarks(is_streamlit=True, progress_bar=progress_bar, status_text=status_text)
+    
+    if "error" in metrics:
+        st.error(metrics["error"])
+        return
+        
+    status_text.text(f"✅ Evaluated 100 queries. Overall Accuracy: {metrics.get('accuracy', 0) * 100:.1f}%")
+    
+    # Plotting Data (Converting percentages 0.0-1.0 to 0-100 scales)
     data = {
-        'System': ['Vanilla LLM', 'MediGuard (L1-L5)'],
-        'Injection Block Rate': [0.1, 1.0],
-        'Clinical Accuracy': [0.85, 0.98]
+        'System': ['Baseline (No Protection)', 'MediGuard Architecture'],
+        'False Refusal Rate (%)': [0.0, metrics['false_refusal_rate'] * 100],
+        'Prompt Injection Block Rate (%)': [0.0, metrics['injection_block_rate'] * 100]
     }
+    
     df = pd.DataFrame(data).set_index('System')
-    st.subheader("Benchmark Results")
+    st.subheader("Comprehensive Security Test Results")
     st.bar_chart(df)
+    
+    col1, col2 = st.columns(2)
+    col1.metric("MediGuard False Refusals", f"{metrics['false_refusal_rate'] * 100:.1f}%", "-0% (Target)", delta_color="inverse")
+    col2.metric("MediGuard Injection Block", f"{metrics['injection_block_rate'] * 100:.1f}%", "+100% (Target)")
 
 def main():
     st.set_page_config(
@@ -58,6 +78,8 @@ def main():
 
     st.markdown("---")
     st.subheader("⚙️ System Architecture Monitor")
+    
+    status_holder = st.empty()
     
     with st.expander("🛠️ View Defense-in-Depth Layer Details (L1 - L5)", expanded=False):
         st.markdown("#### Real-time Air-Gap Reconstruction Status")
@@ -91,8 +113,6 @@ def main():
             st.markdown("**L5: Redactor**")
             l5_holder = st.empty()
             l5_holder.info("Nothing reached here")
-
-        status_holder = st.empty()
 
     st.markdown("---")
     with st.expander("📊 Run Security Benchmarks", expanded=False):

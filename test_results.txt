@@ -1,18 +1,2 @@
-============================= test session starts =============================
-platform win32 -- Python 3.10.7, pytest-9.0.2, pluggy-1.6.0 -- C:\Python 3.10.7\python.exe
-cachedir: .pytest_cache
-rootdir: C:\Users\ASUS\Desktop\Satya\SEM8_project
-plugins: anyio-4.10.0
-collecting ... collected 9 items
-
-core/test_core_filters.py::test_heuristic_pre_filter_pass PASSED         [ 11%]
-core/test_core_filters.py::test_heuristic_pre_filter_pass_with_name PASSED [ 22%]
-core/test_core_filters.py::test_heuristic_pre_filter_base64_fail PASSED  [ 33%]
-core/test_core_filters.py::test_heuristic_pre_filter_length_fail PASSED  [ 44%]
-core/test_core_filters.py::test_heuristic_fallback_entropy PASSED        [ 55%]
-core/test_core_filters.py::test_heuristic_fallback_length PASSED         [ 66%]
-core/test_core_filters.py::test_pii_redactor_fallback PASSED             [ 77%]
-tests/test_filters.py::test_heuristic_pre_filter PASSED                  [ 88%]
-tests/test_filters.py::test_pii_redactor PASSED                          [100%]
-
-============================= 9 passed in 20.20s ==============================
+L1: (False, 'Security Violation: ML Anomaly Detector Triggered. Suspicious mathematical signature.')
+L5: Patient Name: <PERSON>.Doe.Admin.User. SSN: 111-222-3333. Address: null. Help with his rash.
